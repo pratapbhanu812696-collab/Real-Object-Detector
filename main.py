@@ -1,37 +1,49 @@
 import cv2
-from detector import ObjectDetector
+import config
+from detector import RealTimeDetector
 
 def main():
-    detector = ObjectDetector()
-    
-    # Initialize the webcam (0 is usually the default camera)
-    cap = cv2.VideoCapture(0)
-
-    if not cap.isOpened():
-        print("Error: Could not open webcam.")
+    print(f"Loading object detector using {config.MODEL_NAME}...")
+    try:
+        detector = RealTimeDetector(model_name=config.MODEL_NAME)
+    except Exception as e:
+        print("Failed to initialize detector. Exiting.")
         return
 
-    print("Press 'q' to quit.")
+    print("Initializing webcam...")
+    cap = cv2.VideoCapture(config.CAMERA_INDEX)
+
+    if not cap.isOpened():
+        print(f"Error: Could not open webcam at index {config.CAMERA_INDEX}.")
+        return
+
+    print(f"Webcam running. Press '{config.QUIT_KEY}' to quit.")
 
     while True:
         # Capture frame-by-frame
         success, frame = cap.read()
         if not success:
+            print("Warning: Failed to read frame from webcam.")
             break
 
-        # Get annotated frame from the detector
-        annotated_frame = detector.predict_and_annotate(frame)
+        # Process frame to detect objects
+        annotated_frame = detector.predict_and_plot(
+            frame=frame, 
+            stream=config.STREAM_MODE, 
+            conf=config.CONFIDENCE_THRESHOLD
+        )
 
         # Display the resulting frame
-        cv2.imshow("Real-Time Object Detection", annotated_frame)
+        cv2.imshow(config.WINDOW_NAME, annotated_frame)
 
-        # Break the loop on 'q' key press
-        if cv2.waitKey(1) & 0xFF == ord('q'):
+        # Break the loop on the dedicated quit key press
+        if cv2.waitKey(1) & 0xFF == ord(config.QUIT_KEY):
             break
 
-    # Release resources
+    # Release resources cleanly
     cap.release()
     cv2.destroyAllWindows()
+    print("Application closed.")
 
 if __name__ == "__main__":
     main()
