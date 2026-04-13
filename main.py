@@ -1,3 +1,8 @@
+import streamlit as st
+from ultralytics import YOLO  # <--- Ye line yahan Sabse Upar dalni hai
+from model import ObjectDetector  # Ye pehle se hogi wahan
+
+# Iske baad tumhara baki ka sara code start hoga...
 import os
 os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
