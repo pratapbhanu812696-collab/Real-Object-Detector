@@ -1,9 +1,9 @@
-import sys
 import os
-# Ye line 'src' folder ko load karne ke liye zaroori hai
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
+import sys
 import streamlit as st
+# Baaki import baad mein
 import cv2
 import numpy as np
 from PIL import Image
