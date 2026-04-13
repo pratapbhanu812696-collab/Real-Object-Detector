@@ -1,46 +1,36 @@
 import streamlit as st
 import cv2
+from ultralytics import YOLO
 import numpy as np
+from PIL import Image
 
-# Import configuration and model
-from src.config import MODEL_PATH, APP_TITLE, CAMERA_PROMPT
-from src.model import ObjectDetector
+# Cloud settings
+st.set_page_config(page_title="Bhanu's Detector", layout="centered")
+st.title("🤖 Object Detection App")
 
-# Set page layout and title
-st.set_page_config(page_title=APP_TITLE, layout="wide")
-
-# Initialize the model efficiently using cache
+# Model Loading with Cache
 @st.cache_resource
-def load_detector():
-    return ObjectDetector(MODEL_PATH)
+def load_model():
+    return YOLO("yolov8n.pt")
 
-def main():
-    st.title(APP_TITLE)
+try:
+    model = load_model()
+    st.success("Model Loaded!")
+except Exception as e:
+    st.error(f"Model load karne mein error: {e}")
 
-    # Load our object detector
-    detector = load_detector()
+# Camera Input
+img_file_buffer = st.camera_input("Click a photo")
 
-    # Webcam input
-    img_file_buffer = st.camera_input(CAMERA_PROMPT)
+if img_file_buffer is not None:
+    image = Image.open(img_file_buffer)
+    img_array = np.array(image)
+    
+    # Run YOLO
+    results = model(img_array)
 
-    if img_file_buffer is not None:
-        # Convert image to opencv format
-        bytes_data = img_file_buffer.getvalue()
-        cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
-
-        # Predict and annotate
-        with st.spinner('Analyzing...'):
-            annotated_frame = detector.predict_and_annotate(cv2_img)
-
-        # Show annotated image
-        st.image(annotated_frame, caption="Detected Objects")
-
-if __name__ == "__main__":
-    from streamlit.runtime import exists
-    if exists():
-        main()
-    else:
-        import sys
-        import subprocess
-        print("Automatically routing to Streamlit runner...")
-        subprocess.run([sys.executable, "-m", "streamlit", "run", sys.argv[0]] + sys.argv[1:])
+    for r in results:
+        res_plotted = r.plot()
+        # Convert to RGB for Streamlit
+        res_rgb = cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB)
+        st.image(res_rgb, caption='Detection Results', use_container_width=True)
