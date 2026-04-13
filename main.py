@@ -1,8 +1,14 @@
+import sys
+import os
+# Ye line 'src' folder ko load karne ke liye zaroori hai
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
+
 import streamlit as st
 import cv2
-from ultralytics import YOLO
 import numpy as np
 from PIL import Image
+# Ab ye error nahi dega
+from model import ObjectDetector
 
 # Cloud settings
 st.set_page_config(page_title="Bhanu's Detector", layout="centered")
