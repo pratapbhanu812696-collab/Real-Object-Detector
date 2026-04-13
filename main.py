@@ -1,49 +1,46 @@
+import streamlit as st
 import cv2
-import config
-from detector import RealTimeDetector
+import numpy as np
+
+# Import configuration and model
+from src.config import MODEL_PATH, APP_TITLE, CAMERA_PROMPT
+from src.model import ObjectDetector
+
+# Set page layout and title
+st.set_page_config(page_title=APP_TITLE, layout="wide")
+
+# Initialize the model efficiently using cache
+@st.cache_resource
+def load_detector():
+    return ObjectDetector(MODEL_PATH)
 
 def main():
-    print(f"Loading object detector using {config.MODEL_NAME}...")
-    try:
-        detector = RealTimeDetector(model_name=config.MODEL_NAME)
-    except Exception as e:
-        print("Failed to initialize detector. Exiting.")
-        return
+    st.title(APP_TITLE)
 
-    print("Initializing webcam...")
-    cap = cv2.VideoCapture(config.CAMERA_INDEX)
+    # Load our object detector
+    detector = load_detector()
 
-    if not cap.isOpened():
-        print(f"Error: Could not open webcam at index {config.CAMERA_INDEX}.")
-        return
+    # Webcam input
+    img_file_buffer = st.camera_input(CAMERA_PROMPT)
 
-    print(f"Webcam running. Press '{config.QUIT_KEY}' to quit.")
+    if img_file_buffer is not None:
+        # Convert image to opencv format
+        bytes_data = img_file_buffer.getvalue()
+        cv2_img = cv2.imdecode(np.frombuffer(bytes_data, np.uint8), cv2.IMREAD_COLOR)
 
-    while True:
-        # Capture frame-by-frame
-        success, frame = cap.read()
-        if not success:
-            print("Warning: Failed to read frame from webcam.")
-            break
+        # Predict and annotate
+        with st.spinner('Analyzing...'):
+            annotated_frame = detector.predict_and_annotate(cv2_img)
 
-        # Process frame to detect objects
-        annotated_frame = detector.predict_and_plot(
-            frame=frame, 
-            stream=config.STREAM_MODE, 
-            conf=config.CONFIDENCE_THRESHOLD
-        )
-
-        # Display the resulting frame
-        cv2.imshow(config.WINDOW_NAME, annotated_frame)
-
-        # Break the loop on the dedicated quit key press
-        if cv2.waitKey(1) & 0xFF == ord(config.QUIT_KEY):
-            break
-
-    # Release resources cleanly
-    cap.release()
-    cv2.destroyAllWindows()
-    print("Application closed.")
+        # Show annotated image
+        st.image(annotated_frame, caption="Detected Objects")
 
 if __name__ == "__main__":
-    main()
+    from streamlit.runtime import exists
+    if exists():
+        main()
+    else:
+        import sys
+        import subprocess
+        print("Automatically routing to Streamlit runner...")
+        subprocess.run([sys.executable, "-m", "streamlit", "run", sys.argv[0]] + sys.argv[1:])

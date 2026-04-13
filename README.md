@@ -1,38 +1,48 @@
-# Real-Time Object Detector
+# Real-Time Object Detection
 
-A lightweight, real-time object detection module built using Python, OpenCV, and the pre-trained YOLO model (Ultralytics).
+A real-time object detection web application built with Streamlit and YOLOv8 from Ultralytics. The application uses your device's webcam to capture an image and then runs object detection to identify and label multiple objects in the frame simultaneously.
 
-## Project Structure
+## Features
+- **Real-Time Webcam Analysis**: Directly capture pictures using your browser.
+- **YOLOv8 Detection**: High performance and accurate object detection.
+- **Modular Codebase**: Architected with best practices so you can easily modify or swap out models.
 
-- `main.py`: The application entry point. Initializes the camera stream and coordinates between config and detection.
-- `detector.py`: Contains the `RealTimeDetector` logic for encapsulating the YOLO model and single-frame predictions.
-- `config.py`: Hardcoded settings and configurations to tweak the experience (e.g. camera index, model type).
-- `requirements.txt`: Python package dependencies.
+## Repository Structure
+```
+.
+├── src/
+│   ├── config.py    # Configuration constants (Model path, App Title, etc.)
+│   └── model.py     # YOLO ObjectDetector abstraction layer
+├── main.py          # Streamlit UI & Application Entry Point
+├── yolov8n.pt       # Pre-trained Weights (downloaded automatically if missing)
+├── requirements.txt # Python Dependencies
+└── Dockerfile       # Instructions for Docker-based deployment
+```
 
-## Installation
+## Running Locally
 
-1. Clone the repository to your local machine:
-   ```bash
-   git clone <your-repository-url>
-   cd Real-Time-Object-Detector
-   ```
-
-2. (Optional) Create and activate a Virtual Environment.
-
-3. Install the required dependencies:
+1. Install the dependencies:
    ```bash
    pip install -r requirements.txt
    ```
 
-## Usage
+2. Run the application:
+   ```bash
+   streamlit run main.py
+   ```
+   *Note: Because of our smart entrypoint script, you can also just hit "Run" in your IDE or run `python3 main.py` and it will automatically route to the Streamlit server!*
 
-Simply run the application using Python:
+## Deployment
+
+### Deploying to Streamlit Community Cloud
+This repository is already perfectly structured for [Streamlit Community Cloud](https://streamlit.io/cloud). Just connect your GitHub repository and set `main.py` as your Main file Path.
+
+### Deploying via Docker
+You can also package this application as a Docker container using the included `Dockerfile`!
 ```bash
-python main.py
+# Build the image
+docker build -t object-detector .
+
+# Run the container
+docker run -p 8501:8501 object-detector
 ```
-
-Press `q` within the live video window to quit the application gracefully.
-
-## Customization
-
-You can change detection properties inside `config.py` easily. For example, if you want your default webcam to be substituted with an external camera, you can change `CAMERA_INDEX` to `1`.
