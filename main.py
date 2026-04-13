@@ -8,7 +8,7 @@ import cv2
 import numpy as np
 from PIL import Image
 # Ab ye error nahi dega
-from model import ObjectDetector
+from src.model import ObjectDetector  # Agar src folder mein hai toh
 
 # Cloud settings
 st.set_page_config(page_title="Bhanu's Detector", layout="centered")
