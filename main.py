@@ -1,6 +1,7 @@
 import streamlit as st
-from ultralytics import YOLO  # <--- Ye line yahan Sabse Upar dalni hai
-from model import ObjectDetector  # Ye pehle se hogi wahan
+import os
+import cv2
+from ultralytics import YOLO  # <--- Ye line hona sabse zaruri hai
 
 # Iske baad tumhara baki ka sara code start hoga...
 import os
