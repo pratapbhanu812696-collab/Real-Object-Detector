@@ -1,48 +1,57 @@
-# Real-Time Object Detection
+# 🚀 Real-Time Object Detection using YOLOv8 & Streamlit
 
-A real-time object detection web application built with Streamlit and YOLOv8 from Ultralytics. The application uses your device's webcam to capture an image and then runs object detection to identify and label multiple objects in the frame simultaneously.
+This project is a high-performance, web-based **Real-Time Object Detection System** built with Python. It leverages the state-of-the-art **YOLOv8** (You Only Look Once) model for lightning-fast object identification and **Streamlit** for a seamless user interface.
 
-## Features
-- **Real-Time Webcam Analysis**: Directly capture pictures using your browser.
-- **YOLOv8 Detection**: High performance and accurate object detection.
-- **Modular Codebase**: Architected with best practices so you can easily modify or swap out models.
+## 🌐 Live Demo
+Check out the live application here: [https://real-object-detector.onrender.com](https://real-object-detector.onrender.com)
+*(Note: Hosted on Render Free Tier, might take a few seconds to wake up).*
 
-## Repository Structure
-```
-.
-├── src/
-│   ├── config.py    # Configuration constants (Model path, App Title, etc.)
-│   └── model.py     # YOLO ObjectDetector abstraction layer
-├── main.py          # Streamlit UI & Application Entry Point
-├── yolov8n.pt       # Pre-trained Weights (downloaded automatically if missing)
-├── requirements.txt # Python Dependencies
-└── Dockerfile       # Instructions for Docker-based deployment
-```
+---
 
-## Running Locally
+## ✨ Features
+* **Real-Time Detection:** Processes live webcam feed with minimal latency.
+* **YOLOv8 Integration:** Uses the 'Nano' version of YOLOv8 for optimized performance on cloud servers.
+* **Cloud Deployed:** Fully functional on Render with automated CI/CD.
+* **Responsive UI:** Simple and clean interface built with Streamlit.
+* **Cross-Platform:** Works on any device with a browser and camera.
 
-1. Install the dependencies:
+---
+
+## 🛠️ Tech Stack
+* **Language:** Python 3.9+
+* **AI Model:** Ultralytics YOLOv8
+* **Frontend:** Streamlit
+* **Computer Vision:** OpenCV
+* **Deployment:** Render (Cloud PaaS)
+* **Backend:** PyTorch
+
+---
+
+## 🚀 How to Run Locally
+
+1. **Clone the repository:**
    ```bash
-   pip install -r requirements.txt
-   ```
+   git clone [https://github.com/BHANU PRATAP SINGH / Real-Time Object Detection .git](https://real-object-detector.onrender.com)
+   cd your-repo-name
+   Create a Virtual Environment:
 
-2. Run the application:
-   ```bash
-   streamlit run main.py
-   ```
-   *Note: Because of our smart entrypoint script, you can also just hit "Run" in your IDE or run `python3 main.py` and it will automatically route to the Streamlit server!*
+2. Bash
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+Install Dependencies:
 
-## Deployment
+3. Bash
+pip install -r requirements.txt
+Run the App:
 
-### Deploying to Streamlit Community Cloud
-This repository is already perfectly structured for [Streamlit Community Cloud](https://streamlit.io/cloud). Just connect your GitHub repository and set `main.py` as your Main file Path.
+4. Bash
+streamlit run main.py
 
-### Deploying via Docker
-You can also package this application as a Docker container using the included `Dockerfile`!
-```bash
-# Build the image
-docker build -t object-detector .
+🔧 Configuration for Render
+To ensure smooth deployment on Render, the following configurations were applied:
 
-# Run the container
-docker run -p 8501:8501 object-detector
-```
+Requirements: Fixed torch==2.5.1 and torchvision to avoid security-related loading errors in newer versions.
+
+Port Handling: Streamlit configured to run on Render's dynamic port.
+
+Memory Optimization: Used yolov8n.pt to stay within the free tier RAM limits.
