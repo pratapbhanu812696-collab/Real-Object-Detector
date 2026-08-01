@@ -1,7 +1,9 @@
+import time
+import av
+import cv2
 import streamlit as st
 from ultralytics import YOLO
-from PIL import Image
-import numpy as np
+from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
 
 st.set_page_config(
     page_title="Real-Time Object Detection",
@@ -10,105 +12,72 @@ st.set_page_config(
 )
 
 st.title("🎯 Real-Time Object Detection System")
-st.write("YOLOv11 + OpenCV | Object Detection")
+st.write("YOLOv11 + OpenCV | Live Object Detection")
 
-# Load YOLOv11
 @st.cache_resource
 def load_model():
     return YOLO("yolo11n.pt")
 
 model = load_model()
 
-st.subheader("📷 Choose Input")
+class ObjectDetector(VideoProcessorBase):
+    def __init__(self):
+        self.prev_time = time.time()
 
-option = st.radio(
-    "Select an option:",
-    ["Take Picture", "Upload Image"],
-    horizontal=True
-)
+    def recv(self, frame):
+        img = frame.to_ndarray(format="bgr24")
 
-image = None
-
-# Camera
-if option == "Take Picture":
-
-    camera_image = st.camera_input("Take a picture")
-
-    if camera_image is not None:
-        image = Image.open(camera_image).convert("RGB")
-
-# Upload
-else:
-
-    uploaded_image = st.file_uploader(
-        "Upload an image",
-        type=["jpg", "jpeg", "png"]
-    )
-
-    if uploaded_image is not None:
-        image = Image.open(uploaded_image).convert("RGB")
-
-
-# Detection
-if image is not None:
-
-    st.subheader("🔍 Detection Result")
-
-    frame = np.array(image)
-
-    with st.spinner("Detecting objects..."):
-
-        results = model.predict(
-            source=frame,
-            conf=0.25,
+        results = model(
+            img,
+            conf=0.5,
             imgsz=640,
             verbose=False
         )
 
-    result = results[0]
+        output = results[0].plot()
 
-    # Draw boxes
-    output = result.plot()
+        current_time = time.time()
+        elapsed = current_time - self.prev_time
+        fps = 1 / elapsed if elapsed > 0 else 0
+        self.prev_time = current_time
 
-    # Display result
-    st.image(
-        output,
-        channels="BGR",
-        caption="YOLOv11 Detection Result",
-        use_container_width=True
-    )
-
-    # Object information
-    if result.boxes is not None and len(result.boxes) > 0:
-
-        st.subheader("📊 Detected Objects")
-
-        counts = {}
-
-        for box in result.boxes:
-
-            class_id = int(box.cls.item())
-            confidence = float(box.conf.item())
-
-            class_name = model.names[class_id]
-
-            counts[class_name] = counts.get(class_name, 0) + 1
-
-            st.write(
-                f"**{class_name}** — {confidence * 100:.1f}%"
-            )
-
-        detected_text = ", ".join(
-            f"{name} ({count})"
-            for name, count in counts.items()
+        cv2.putText(
+            output,
+            f"FPS: {int(fps)}",
+            (20, 40),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            1,
+            (0, 255, 0),
+            2
         )
 
-        st.success(
-            f"Detected: {detected_text}"
+        return av.VideoFrame.from_ndarray(
+            output,
+            format="bgr24"
         )
 
-    else:
+rtc_configuration = {
+    "iceServers": [
+        {
+            "urls": ["stun:stun.l.google.com:19302"]
+        }
+    ]
+}
 
-        st.warning(
-            "No object detected. Try a clearer image or move closer."
-        )
+st.subheader("📷 Live Camera")
+
+webrtc_streamer(
+    key="object-detection",
+    video_processor_factory=ObjectDetector,
+    rtc_configuration=rtc_configuration,
+    media_stream_constraints={
+        "video": True,
+        "audio": False
+    },
+    async_processing=True
+)
+
+st.info(
+    "Camera permission ko Allow karein. "
+    "Camera ke saamne object laane par YOLOv11 automatically live detection karega."
+)
