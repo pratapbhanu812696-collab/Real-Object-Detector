@@ -1,83 +1,50 @@
-import time
-import av
-import cv2
 import streamlit as st
-from ultralytics import YOLO
-from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
+from ultralytics import YOLO  # <--- Ye line yahan Sabse Upar dalni hai
+from model import ObjectDetector  # Ye pehle se hogi wahan
+import os
+import cv2
+from ultralytics import YOLO  # <--- Ye line hona sabse zaruri hai
 
-st.set_page_config(
-    page_title="Real-Time Object Detection",
-    page_icon="🎯",
-    layout="centered"
-)
+# Iske baad tumhara baki ka sara code start hoga...
+import os
+os.environ["QT_QPA_PLATFORM"] = "offscreen"
 
-st.title("🎯 Real-Time Object Detection System")
-st.write("YOLOv11 + OpenCV | Live Object Detection")
+import sys
+import streamlit as st
+# Baaki import baad mein
+import cv2
+import numpy as np
+from PIL import Image
+# Ab ye error nahi dega
+from src.model import ObjectDetector  # Agar src folder mein hai toh
 
+# Cloud settings
+st.set_page_config(page_title="Bhanu's Detector", layout="centered")
+st.title("🤖 Object Detection App")
+
+# Model Loading with Cache
 @st.cache_resource
 def load_model():
-    return YOLO("yolo11n.pt")
+    return YOLO("yolov8n.pt")
 
-model = load_model()
+try:
+    model = load_model()
+    st.success("Model Loaded!")
+except Exception as e:
+    st.error(f"Model load karne mein error: {e}")
 
-class ObjectDetector(VideoProcessorBase):
-    def __init__(self):
-        self.prev_time = time.time()
+# Camera Input
+img_file_buffer = st.camera_input("Click a photo")
 
-    def recv(self, frame):
-        img = frame.to_ndarray(format="bgr24")
+if img_file_buffer is not None:
+    image = Image.open(img_file_buffer)
+    img_array = np.array(image)
 
-        results = model(
-            img,
-            conf=0.5,
-            imgsz=640,
-            verbose=False
-        )
+    # Run YOLO
+    results = model(img_array)
 
-        output = results[0].plot()
-
-        current_time = time.time()
-        elapsed = current_time - self.prev_time
-        fps = 1 / elapsed if elapsed > 0 else 0
-        self.prev_time = current_time
-
-        cv2.putText(
-            output,
-            f"FPS: {int(fps)}",
-            (20, 40),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            1,
-            (0, 255, 0),
-            2
-        )
-
-        return av.VideoFrame.from_ndarray(
-            output,
-            format="bgr24"
-        )
-
-rtc_configuration = {
-    "iceServers": [
-        {
-            "urls": ["stun:stun.l.google.com:19302"]
-        }
-    ]
-}
-
-st.subheader("📷 Live Camera")
-
-webrtc_streamer(
-    key="object-detection",
-    video_processor_factory=ObjectDetector,
-    rtc_configuration=rtc_configuration,
-    media_stream_constraints={
-        "video": True,
-        "audio": False
-    },
-    async_processing=True
-)
-
-st.info(
-    "Camera permission ko Allow karein. "
-    "Camera ke saamne object laane par YOLOv11 automatically live detection karega."
-)
+    for r in results:
+        res_plotted = r.plot()
+        # Convert to RGB for Streamlit
+        res_rgb = cv2.cvtColor(res_plotted, cv2.COLOR_BGR2RGB)
+        st.image(res_rgb, caption='Detection Results', use_container_width=True)
