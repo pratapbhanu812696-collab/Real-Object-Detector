@@ -1,14 +1,9 @@
+import time
+import av
+import cv2
 import streamlit as st
 from ultralytics import YOLO
 from streamlit_webrtc import webrtc_streamer, VideoProcessorBase
-import av
-import cv2
-import time
-
-
-# -----------------------------
-# PAGE CONFIG
-# -----------------------------
 
 st.set_page_config(
     page_title="Real-Time Object Detection",
@@ -19,51 +14,31 @@ st.set_page_config(
 st.title("🎯 Real-Time Object Detection System")
 st.write("YOLOv11 + OpenCV | Live Object Detection")
 
-
-# -----------------------------
-# LOAD YOLOv11 MODEL
-# -----------------------------
-
 @st.cache_resource
 def load_model():
     return YOLO("yolo11n.pt")
 
-
 model = load_model()
 
-
-# -----------------------------
-# VIDEO PROCESSOR
-# -----------------------------
-
 class ObjectDetector(VideoProcessorBase):
-
     def __init__(self):
         self.prev_time = time.time()
 
     def recv(self, frame):
-
-        # Convert WebRTC frame to OpenCV
         img = frame.to_ndarray(format="bgr24")
 
-        # YOLOv11 detection
         results = model(
             img,
             conf=0.5,
+            imgsz=640,
             verbose=False
         )
 
-        # Draw bounding boxes
         output = results[0].plot()
 
-        # -----------------------------
-        # FPS
-        # -----------------------------
-
         current_time = time.time()
-
-        fps = 1 / (current_time - self.prev_time)
-
+        elapsed = current_time - self.prev_time
+        fps = 1 / elapsed if elapsed > 0 else 0
         self.prev_time = current_time
 
         cv2.putText(
@@ -76,25 +51,25 @@ class ObjectDetector(VideoProcessorBase):
             2
         )
 
-        # -----------------------------
-        # RETURN FRAME
-        # -----------------------------
-
         return av.VideoFrame.from_ndarray(
             output,
             format="bgr24"
         )
 
-
-# -----------------------------
-# START LIVE CAMERA
-# -----------------------------
+rtc_configuration = {
+    "iceServers": [
+        {
+            "urls": ["stun:stun.l.google.com:19302"]
+        }
+    ]
+}
 
 st.subheader("📷 Live Camera")
 
 webrtc_streamer(
     key="object-detection",
     video_processor_factory=ObjectDetector,
+    rtc_configuration=rtc_configuration,
     media_stream_constraints={
         "video": True,
         "audio": False
@@ -102,8 +77,7 @@ webrtc_streamer(
     async_processing=True
 )
 
-
 st.info(
-    "Camera ke saamne object lao. "
-    "YOLOv11 automatically live detection karega."
+    "Camera permission ko Allow karein. "
+    "Camera ke saamne object laane par YOLOv11 automatically live detection karega."
 )
