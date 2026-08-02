@@ -34,7 +34,7 @@ input_method = st.sidebar.radio(
 )
 
 # -------------------------------------------------
-# Load YOLOv8 model
+# Load YOLOv8 model locally
 # -------------------------------------------------
 @st.cache_resource
 def load_model():
@@ -73,13 +73,16 @@ if img_file_buffer is not None:
     try:
         # Read captured/uploaded image
         image = Image.open(img_file_buffer).convert("RGB")
+        
+        # --- Memory optimize karne ke liye size chhota kiya gaya hai ---
+        image = image.resize((320, 320))
         img_array = np.array(image)
 
-        # Run YOLOv8 with dynamic confidence
+        # Run YOLOv8 with optimized image size
         results = model.predict(
             source=img_array,
             conf=confidence_threshold,
-            imgsz=640,
+            imgsz=320,
             verbose=False
         )
 
