@@ -16,6 +16,24 @@ st.set_page_config(
 st.title("🤖 Object Detection App")
 
 # -------------------------------------------------
+# Sidebar Controls (Confidence & Input Method)
+# -------------------------------------------------
+st.sidebar.header("⚙️ Settings")
+
+confidence_threshold = st.sidebar.slider(
+    "Confidence Threshold",
+    min_value=0.05,
+    max_value=1.0,
+    value=0.25,
+    step=0.05
+)
+
+input_method = st.sidebar.radio(
+    "Choose Input Method",
+    ["Camera", "Upload Image"]
+)
+
+# -------------------------------------------------
 # Load YOLOv8 model
 # -------------------------------------------------
 @st.cache_resource
@@ -34,9 +52,17 @@ except Exception as e:
 
 
 # -------------------------------------------------
-# Camera input
+# Image Input (Camera or Uploader)
 # -------------------------------------------------
-img_file_buffer = st.camera_input("Click a photo")
+img_file_buffer = None
+
+if input_method == "Camera":
+    img_file_buffer = st.camera_input("Click a photo")
+else:
+    img_file_buffer = st.file_uploader(
+        "Upload an image", 
+        type=["jpg", "jpeg", "png"]
+    )
 
 
 # -------------------------------------------------
@@ -45,14 +71,14 @@ img_file_buffer = st.camera_input("Click a photo")
 if img_file_buffer is not None:
 
     try:
-        # Read captured image
+        # Read captured/uploaded image
         image = Image.open(img_file_buffer).convert("RGB")
         img_array = np.array(image)
 
-        # Run YOLOv8
+        # Run YOLOv8 with dynamic confidence
         results = model.predict(
             source=img_array,
-            conf=0.25,
+            conf=confidence_threshold,
             imgsz=640,
             verbose=False
         )
@@ -120,7 +146,7 @@ if img_file_buffer is not None:
 
             st.warning(
                 "No object detected. "
-                "Try taking a clearer photo or move closer."
+                "Try lowering the confidence threshold from the sidebar, taking a clearer photo, or uploading a different image."
             )
 
     except Exception as e:
