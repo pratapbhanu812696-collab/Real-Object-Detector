@@ -1,5 +1,4 @@
 import streamlit as st
-import cv2
 import numpy as np
 from PIL import Image
 from ultralytics import YOLO
@@ -88,14 +87,8 @@ if img_file_buffer is not None:
 
         result = results[0]
 
-        # Draw bounding boxes and labels
+        # Draw bounding boxes and labels (Ultralytics returns RGB array by default when plotted on numpy array)
         res_plotted = result.plot()
-
-        # BGR -> RGB
-        res_rgb = cv2.cvtColor(
-            res_plotted,
-            cv2.COLOR_BGR2RGB
-        )
 
         # -------------------------------------------------
         # Detection Result
@@ -103,7 +96,7 @@ if img_file_buffer is not None:
         st.subheader("🔍 Detection Results")
 
         st.image(
-            res_rgb,
+            res_plotted,
             caption="YOLOv8 Detection",
             use_container_width=True
         )
