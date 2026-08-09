@@ -1,5 +1,13 @@
 import cv2
+import torch
 from ultralytics import YOLO
+from ultralytics.nn.tasks import DetectionModel
+
+# PyTorch 2.6+ ke liye safe globals add karein taaki YOLO weights successfully load ho sakein
+try:
+    torch.serialization.add_safe_globals([DetectionModel])
+except AttributeError:
+    pass  # Agar older PyTorch version hua toh ignore ho jayega
 
 class ObjectDetector:
     def __init__(self, model_path):
