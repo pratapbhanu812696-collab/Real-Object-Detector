@@ -1,15 +1,5 @@
 import cv2
-import torch
 from ultralytics import YOLO
-from ultralytics.nn.tasks import DetectionModel
-from torch.nn.modules.container import Sequential
-from ultralytics.nn.modules import Conv
-
-# PyTorch ke liye required safe globals add karein
-try:
-    torch.serialization.add_safe_globals([DetectionModel, Sequential, Conv])
-except AttributeError:
-    pass
 
 class ObjectDetector:
     def __init__(self, model_path):
@@ -22,14 +12,9 @@ class ObjectDetector:
         """
         Runs inference on the image and returns the annotated frame.
         """
-        # Inference
         results = self.model(image)
-
-        # Plot results
         for r in results:
             annotated_frame = r.plot()
-            # Convert BGR to RGB for Streamlit
             annotated_frame = cv2.cvtColor(annotated_frame, cv2.COLOR_BGR2RGB)
             return annotated_frame
-            
         return image
