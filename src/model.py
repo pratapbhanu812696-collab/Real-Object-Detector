@@ -3,10 +3,11 @@ import torch
 from ultralytics import YOLO
 from ultralytics.nn.tasks import DetectionModel
 from torch.nn.modules.container import Sequential
+from ultralytics.nn.modules import Conv
 
 # PyTorch ke liye required safe globals add karein
 try:
-    torch.serialization.add_safe_globals([DetectionModel, Sequential])
+    torch.serialization.add_safe_globals([DetectionModel, Sequential, Conv])
 except AttributeError:
     pass
 
